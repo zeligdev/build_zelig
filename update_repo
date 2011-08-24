@@ -27,9 +27,7 @@ function log {
 # Get R's version number
 VERSION=$(echo $VERSION_SCRIPT | /usr/bin/R --vanilla --slave | sed -e "s/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1.\2/g")
 
-echo "\n\n" >> $LOG
-
-echo "Zelig starting up on $(date)" >> $LOG
+echo "Zelig Build started up on $(date)" >> $LOG
 echo " * R version $VERSION" >> $LOG
 echo " * $(git --version)" >> $LOG
 echo >> $LOG
@@ -97,6 +95,7 @@ fi
 
 
 # Move files to destination
+log "moving packages to destination folder"
 mv -f *.tar.gz $DEST
 
 
@@ -104,4 +103,4 @@ mv -f *.tar.gz $DEST
 echo $PACKAGES_SCRIPT | /usr/bin/R --vanilla --slave
 
 
-echo "\n\n" >> $LOG
+echo "\n" >> $LOG

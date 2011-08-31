@@ -1,0 +1,32 @@
+#!/bin/bash
+
+COMPACT="tools:::compactPDF(\"$1.pdf\")"
+
+
+# Build TeX document
+R CMD Sweave $1
+
+# Build PDF
+pdflatex $1
+bibtex $1
+pdflatex $1
+pdflatex $1
+
+# Compact PDF
+echo $COMPACT | /usr/bin/R --vanilla --slave --no-restore
+
+# pdflatex clean-up
+rm $1.aux
+rm $1.log
+rm $1.out
+
+# bibtex clean-up
+rm $1.bbl
+rm $1.blg
+
+# Sweave clean-up
+rm $1.tex
+
+if [ -e Rplots.pdf ]; then
+  rm Rplots.pdf
+fi

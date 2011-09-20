@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# git clone https://github.com/zeligdev/Zelig
+# git clone https://github.com/zeligdev/zelig.ordinal
+# git clone https://github.com/zeligdev/multivariate.zelig
+# git clone https://github.com/zeligdev/Mixed-Zelig
+# git clone https://github.com/zeligdev/gee.zelig
+# git clone https://github.com/zeligdev/gam.zelig
+# git clone https://github.com/zeligdev/bivariate.zelig
+# git clone https://github.com/zeligdev/Survey-Zelig
+
+git clone https://github.com/zeligdev/Zelig.git
+git clone https://github.com/zeligdev/Zelig-Documentation.git
+git clone https://github.com/zeligdev/zeligdev.github.com.git

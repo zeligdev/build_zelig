@@ -89,17 +89,18 @@ done < $FILENAME
 # Make destination directory if it doesn't exist
 if [ ! -d $DEST ]
 then
-  log "making destination folder: $DEST" $LOG
+  log "Making destination folder: $DEST" $LOG
   mkdir $DEST
 fi
 
 
 # Move files to destination
-log "moving packages to destination folder"
+log "Moving packages to destination folder" $LOG
 mv -f *.tar.gz $DEST
 
 
 # Execute R Script
+log "Create \"PACKAGES\" file" $LOG
 echo $PACKAGES_SCRIPT | /usr/bin/R --vanilla --slave
 
 

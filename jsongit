@@ -1,13 +1,135 @@
 #!/usr/bin/python
 
-import json, httplib, urllib2
+# json converts json strips into data structures
+# urllib2 makes the https request
+import json, urllib2, datetime, sys, os
+import subprocess
+from os import system
 
-request = urllib2.Request("https://api.github.com/users/zeligdev/repos")
+# log
+class log:
+  # Constructor (open the file handle)
+  def __init__ (self, file):
+    self.file = file
+    self.handle = open(file, "a")
+
+  # Deconstructor (close the file handle)
+  def __del__ (self): 
+    self.pad()
+    self.handle.close()
+
+  # Write a message. This is the low level print function
+  def write (self, msg): print >> self.handle, msg
+
+  # Just write a message with a stamp
+  def info (self, msg): 
+    timestamp = "[%d/%d/%d %s:%s:%s] " % self.time()
+    self.write(timestamp + msg)
+
+  # Write an error to the log
+  def error (self, msg): self.info("ERROR: " + msg)
+
+  # Write a *BIG ERROR* to the log
+  def bigerror (self, msg): self.info("***ERROR*** " + msg)
+
+  # Write a warning to the log
+  def warning (self, msg): self.info("Warning: " + msg)
+
+  #
+  def time (self):
+    now = datetime.datetime.now()
+    now = (now.month, now.day, now.year, now.hour, now.minute, now.second)
+    return now
+
+  # ..
+  def pad (self, lines=2, string = "\n"): self.write(string * lines)
+
+
+#
+#
+#
+def is_r_package (path):
+
+  if not os.path.isdir(path): return False
+
+  R = os.path.join(path, "R")
+  man = os.path.join(path, "man")
+  DESCRIPTION = os.path.join(path, "DESCRIPTION")
+  NAMESPACE = os.path.join(path, "NAMESPACE")
+
+  goodfile = lambda x: os.path.isfile(x) and not os.path.islink(x)
+
+  if not goodfile(DESCRIPTION): return False
+  if not goodfile(NAMESPACE): return False
+  if not os.path.isdir(R): return False
+  if not os.path.isdir(man): return False
+
+  return True
+
+
+
+zelig_build = log("zelig_build.log")
+
+zelig_build.info("Staring up")
+
+#
+user = "zeligdev"
+url = "https://api.github.com/users/zeligdev/repos"
+
+# Get a response from the github api
+# logger.info("Getting repository listing from zeligdev")
+request = urllib2.Request(url)
 response_stream = urllib2.urlopen(request)
 response = response_stream.read()
 
+zelig_build.info("Getting list of repositories from " + url)
+
+# Parses the repsonse into an actual data structure. Awesome!
 repos = json.loads(response)
 
-git_urls = map(lambda x: x['clone_url'], repos)
-for url in sorted(git_urls):
-  print url
+git_urls = map(lambda x: x['git_url'], repos)
+
+
+# Clone
+for r in repos:
+  pkg = r['name']
+  url = r['git_url']
+
+  zelig_build.info("Cloning %s (%s)" % (url, pkg))
+  result = subprocess.call("git clone %s %s" % (url, pkg), shell=True)
+
+  if result == 0:
+    zelig_build.info("Clone: Success")
+  else:
+    zelig_build.info("Clone: Fail")
+
+
+# Check
+for r in repos:
+  pkg = r['name']
+
+  if not is_r_package(pkg):
+    zelig_build.info(pkg + " is not an R package. Skipping")
+    continue
+
+  zelig_build.info("Checking %s")
+  result = subprocess.call("R CMD check %s" % pkg, shell=True)
+
+  if result == 0:
+    zelig_build.info("Check: Success")
+  else:
+    zelig_build.info("Check: Fail")
+
+
+# Build
+for r in repos:
+  pkg = r['name']
+
+  zelig_build.info("Building %s")
+  #result = subprocess.call("R CMD build %s" % pkg, shell=True)
+  result = 0
+
+  if result == 0:
+    zelig_build.info("Build: Success")
+  else:
+    zelig_build.info("Build: Fail")

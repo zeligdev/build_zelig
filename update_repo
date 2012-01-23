@@ -12,6 +12,10 @@ VERSION_SCRIPT="writeLines(paste(version\$major, version\$minor, sep='.'))"
 PACKAGES_SCRIPT="setwd('$DEST'); tools:::write_PACKAGES()"
 
 
+#
+
+
+
 function log {
   local DATE=$(date -jn "+[%H:%M:%S %D]")
   if [ $2 ]

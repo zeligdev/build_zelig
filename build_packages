@@ -67,14 +67,49 @@ def is_r_package (path):
   return True
 
 
-
-zelig_build = log("zelig_build.log")
-
-zelig_build.info("Staring up")
-
-#
+# parse options
 user = "zeligdev"
 url = "https://api.github.com/users/zeligdev/repos"
+
+
+# directory variables
+original_wd = os.getcwd()
+clone_dir = "clone"
+check_dir = "check"
+build_dir = "repos"
+destination = os.path.expanduser("~/Sites/src/contrib")
+
+
+# Logger
+zelig_build = log("zelig_build.log")
+zelig_build.info("Staring up")
+
+
+# make directories
+try: 
+  zelig_build.info("Creating directory " + clone_dir)
+  os.mkdir(clone_dir)
+except OSError: 
+  zelig_build.info("Directory " + clone_dir + "already exists. Skipping")
+
+try:
+  zelig_build.info("Creating directory " + check_dir)
+  os.mkdir(check_dir)
+except OSError:
+  zelig_build.info("Directory " + check_dir + "already exists. Skipping")
+
+try:
+  zelig_build.info("Creating directory " + build_dir)
+  os.mkdir(build_dir)
+except OSError:
+  zelig_build.info("Directory " + build_dir + "already exists. Skipping")
+
+#
+if not os.path.exists(destination):
+  zelig_build.info(
+      "The destination repository directory (" + destination + ") must exist"
+      )
+
 
 # Get a response from the github api
 # logger.info("Getting repository listing from zeligdev")
@@ -82,15 +117,25 @@ request = urllib2.Request(url)
 response_stream = urllib2.urlopen(request)
 response = response_stream.read()
 
+
+# Program start
 zelig_build.info("Getting list of repositories from " + url)
+
 
 # Parses the repsonse into an actual data structure. Awesome!
 repos = json.loads(response)
+
+
+# Change working directory
+os.chdir(clone_dir)
+
 
 # Clone
 for r in repos:
   pkg = r['name']
   url = r['git_url']
+
+  pkg_dest = os.path.join(clone_dir, pkg)
 
   zelig_build.info("Cloning %s (%s)" % (url, pkg))
   result = subprocess.call("git clone %s %s" % (url, pkg), shell=True)
@@ -101,32 +146,64 @@ for r in repos:
     zelig_build.info("Clone: Fail")
 
 
+# Change working directory
+os.chdir(os.path.join(original_wd, check_dir))
+
 # Check
-for r in repos:
-  pkg = r['name']
+# for r in repos:
+#   pkg = r['name']
+#   pkg = os.path.join("..", clone_dir, pkg)
+# 
+#   if not is_r_package(pkg):
+#     zelig_build.info(pkg + " is not an R package. Skipping")
+#     continue
+# 
+#   zelig_build.info(pkg + " is an R package")
+#   zelig_build.info("Checking %s")
+# 
+#   # Run from the system's shell
+#   result = subprocess.call("R CMD check %s" % pkg, shell=True)
+# 
+#   if result == 0:
+#     zelig_build.info("Check: Success")
+#   else:
+#     zelig_build.info("Check: Fail")
 
-  if not is_r_package(pkg):
-    zelig_build.info(pkg + " is not an R package. Skipping")
-    continue
 
-  zelig_build.info("Checking %s")
-  result = subprocess.call("R CMD check %s" % pkg, shell=True)
-
-  if result == 0:
-    zelig_build.info("Check: Success")
-  else:
-    zelig_build.info("Check: Fail")
-
+# Change working directory
+os.chdir(os.path.join(original_wd, build_dir))
 
 # Build
 for r in repos:
   pkg = r['name']
+  pkg = os.path.join("..", clone_dir, pkg)
 
-  zelig_build.info("Building %s")
-  # result = subprocess.call("R CMD build %s" % pkg, shell=True)
-  result = 0
+  zelig_build.info("Building %s" % pkg)
+
+  # Run from the system's shell
+  result = subprocess.call("R CMD build %s" % pkg, shell=True)
+
+  # Move into the "REPOS" file
+  # print tarball, "->", pkg_repos_dest
+  # os.rename(tarball, pkg_repos_dest)
 
   if result == 0:
     zelig_build.info("Build: Success")
   else:
     zelig_build.info("Build: Fail")
+
+
+# os.rename("*.tar.gz", )
+
+
+os.chdir(original_wd)
+
+try:
+  os.renames(build_dir, destination)
+except OSError:
+  zelig_build.info("Moving packages")
+
+
+# Create PACKAGES file
+r_script = "tools:::write_PACKAGES()"
+subprocess.call('"' + r_script + '"')

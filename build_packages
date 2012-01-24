@@ -2,9 +2,11 @@
 
 # json converts json strips into data structures
 # urllib2 makes the https request
-import json, urllib2, datetime, sys, os
+import json, urllib2, datetime, sys, os, shutil
 import subprocess
+
 from os import system
+from optparse import OptionParser
 
 # log
 class log:
@@ -67,21 +69,54 @@ def is_r_package (path):
   return True
 
 
-# parse options
-user = "zeligdev"
-url = "https://api.github.com/users/zeligdev/repos"
+# Craete Option parser
+parser = OptionParser()
+
+# Create a menu
+parser.add_option("-d", "--dest", dest="dest")
+parser.add_option("-c", "--clone", dest="clone", default="clone")
+parser.add_option("-b", "--build", dest="build", default="build")
+parser.add_option("-C", "--check", dest="check", default="check")
+parser.add_option("-l", "--log", dest="log", default="zbuild.log")
+parser.add_option(
+    "-R", "--repo", dest="repo", 
+    default="https://api.github.com/users/zeligdev/repos"
+    )
+
+# Parse the commandline
+(options, args) = parser.parse_args()
+
+
+# Parse options
+clone_dir = os.path.expanduser(options.clone)
+check_dir = os.path.expanduser(options.check)
+build_dir = os.path.expanduser(options.build)
+url = os.path.expanduser(options.repo)
+
+# Ensure that -d or --dest are set
+if options.dest is None:
+  print "Error: \"--dest\" is not specified!"
+  sys.exit()
+
+# Continue parse options
+destination = os.path.expanduser(options.dest)
 
 
 # directory variables
 original_wd = os.getcwd()
-clone_dir = "clone"
-check_dir = "check"
-build_dir = "repos"
-destination = os.path.expanduser("~/Sites/src/contrib")
+
+# Display info blurb
+print "Zelig Build v0.9"
+print "----------------"
+print "  dest .....", options.dest
+print "  clone ....", options.clone
+print "  check ....", options.check
+print "  build ....", options.build
+print "  log file ..", options.log
 
 
 # Logger
-zelig_build = log("zelig_build.log")
+zelig_build = log(options.log)
 zelig_build.info("Staring up")
 
 
@@ -150,24 +185,24 @@ for r in repos:
 os.chdir(os.path.join(original_wd, check_dir))
 
 # Check
-# for r in repos:
-#   pkg = r['name']
-#   pkg = os.path.join("..", clone_dir, pkg)
-# 
-#   if not is_r_package(pkg):
-#     zelig_build.info(pkg + " is not an R package. Skipping")
-#     continue
-# 
-#   zelig_build.info(pkg + " is an R package")
-#   zelig_build.info("Checking %s")
-# 
-#   # Run from the system's shell
-#   result = subprocess.call("R CMD check %s" % pkg, shell=True)
-# 
-#   if result == 0:
-#     zelig_build.info("Check: Success")
-#   else:
-#     zelig_build.info("Check: Fail")
+for r in repos:
+  pkg = r['name']
+  pkg = os.path.join("..", clone_dir, pkg)
+
+  if not is_r_package(pkg):
+    zelig_build.info(pkg + " is not an R package. Skipping")
+    continue
+
+  zelig_build.info(pkg + " is an R package")
+  zelig_build.info("Checking %s")
+
+  # Run from the system's shell
+  result = subprocess.call("R CMD check %s" % pkg, shell=True)
+
+  if result == 0:
+    zelig_build.info("Check: Success")
+  else:
+    zelig_build.info("Check: Fail")
 
 
 # Change working directory
@@ -193,17 +228,30 @@ for r in repos:
     zelig_build.info("Build: Fail")
 
 
-# os.rename("*.tar.gz", )
-
-
+# Ensure we're in the parent directory
 os.chdir(original_wd)
 
-try:
-  os.renames(build_dir, destination)
-except OSError:
-  zelig_build.info("Moving packages")
+# Copy the recently created tarballs over to the destination directory
+for src_file in os.listdir(build_dir):
+  # Source file
+  src_file = os.path.join(build_dir, src_file)
+
+  # Destination file
+  dest_file = os.path.join(destination, os.path.basename(src_file))
+
+  zelig_build.info('Copying "%s" -> "%s"' % (src_file, dest_file))
+
+  # Copy (recursively) files into the destination
+  shutil.copy(src_file, dest_file)
 
 
-# Create PACKAGES file
-r_script = "tools:::write_PACKAGES()"
-subprocess.call('"' + r_script + '"')
+# Move into the code repository. This is to facilitate the making of the 
+# PACKAGES files
+os.chdir(destination)
+
+zelig_build.info("Creating 'PACKAGES' and 'PACKAGES.gz' Files in " + os.getcwd())
+
+# Create PACKAGES and PACKAGES.gz file
+r_script = '"tools:::write_PACKAGES()"'
+cmd = "echo %s | /usr/bin/R --vanilla --slave" % r_script
+subprocess.call(cmd, shell=True)

@@ -1,7 +1,20 @@
-# Install Script for a Collection of Zelig packages
-# author Matt Owen
+# Install the complete Zelig software suite
+#
+# Installs the complete Zelig software suite (13 packages) automatically.
+# It accomplishes this by:
+#   * Checking the Zelig repository for existing Zelig packages
+#   * Determine their dependencies without installing
+#
+# @author Matt Owen 
+# @date 01/24/2012
 
-repos <- 'http://people.iq.harvard.edu/~mowen/repo/'
+
+
+# Repositories
+cran.master <- "http://software.rc.fas.harvard.edu/mirrors/R/"
+repository <- "http://140.247.114.117/~matt/src/contrib/"
+
+# Packages to install
 packages <- c(
               'Zelig',
               'ZeligMisc',
@@ -18,13 +31,37 @@ packages <- c(
               'ZeligLeastSquares'
               )
 
-successes <- c()
-fails <- c()
+packages <- unique(packages)
+names(packages) <- packages
+
+# Information on all available packages
+package.matrix <- available.packages(repository, fields="Depends")
+package.matrix <- tools::package.dependencies(package.matrix)
 
 
 
-# INSTALL DEPENDENCIES
-cran.master <- "http://software.rc.fas.harvard.edu/mirrors/R/"
+# Dependencies for each package
+package.dependencies <- Map(
+                            function (pkg) pkg[, 1],
+                            package.matrix
+                            )
+
+
+for (pkg in names(package.dependencies)) {
+  deps <- package.dependencies[[pkg]]
+
+  for (pkg.dep in deps) {
+    print(pkg.dep)
+  }
+  cat("\n")
+}
+
+q()
+
+
+
+
+
 
 # This package comes with source distributions
 install.packages('methods', repos=cran.master) # methods comes bundled with R
@@ -33,15 +70,18 @@ install.packages('methods', repos=cran.master) # methods comes bundled with R
 install.packages('survival', repos=cran.master)
 install.packages('MASS', repos=cran.master)
 
-# This package is non-standard
-install.packages('iterators', repos=cran.master)
 
-# INSTALL PACKAGES 
+
+#
+fails <- successes <- c()
 
 for (pkg in packages) {
 
   res <- tryCatch(
-                  { install.packages(pkg, repos=repos, type='source'); TRUE },
+                  {
+                    install.packages(pkg, repos=repository, type='source');
+                    TRUE
+                  },
                   warning = function (w) FALSE,
                   error = function (e) FALSE
                   )

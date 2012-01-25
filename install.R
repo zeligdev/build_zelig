@@ -12,7 +12,10 @@
 
 # Repositories
 cran.master <- "http://software.rc.fas.harvard.edu/mirrors/R/"
-repository <- "http://140.247.114.117/~matt/src/contrib/"
+cran.master <- "http://cran.r-project.org/"
+
+repository <- "http://140.247.114.117/~matt/"
+src.contrib <- "http://140.247.114.117/~matt/src/contrib/"
 
 # Packages to install
 packages <- c(
@@ -35,8 +38,10 @@ packages <- unique(packages)
 names(packages) <- packages
 
 # Information on all available packages
-package.matrix <- available.packages(repository, fields="Depends")
+package.matrix <- available.packages(src.contrib, fields="Depends")
 package.matrix <- tools::package.dependencies(package.matrix)
+
+# All available
 
 
 
@@ -45,22 +50,8 @@ package.dependencies <- Map(
                             function (pkg) pkg[, 1],
                             package.matrix
                             )
-
-
-for (pkg in names(package.dependencies)) {
-  deps <- package.dependencies[[pkg]]
-
-  for (pkg.dep in deps) {
-    print(pkg.dep)
-  }
-  cat("\n")
-}
-
-q()
-
-
-
-
+package.dependencies <- unique(unlist(package.dependencies))
+package.dependencies <- package.dependencies['R' != package.dependencies]
 
 
 # This package comes with source distributions
@@ -70,9 +61,11 @@ install.packages('methods', repos=cran.master) # methods comes bundled with R
 install.packages('survival', repos=cran.master)
 install.packages('MASS', repos=cran.master)
 
+# Install all the dependency packages from CRAN
+for (pkg in names(package.dependencies))
+  install.packages(pkg, repos = cran.master)
 
-
-#
+# Initialize fails and successes as zero
 fails <- successes <- c()
 
 for (pkg in packages) {

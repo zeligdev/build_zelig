@@ -15,7 +15,7 @@ cran.master <- "http://software.rc.fas.harvard.edu/mirrors/R/"
 cran.master <- "http://cran.r-project.org/"
 
 repository <- "http://140.247.114.117/~matt/"
-src.contrib <- "http://140.247.114.117/~matt/src/contrib/"
+src.contrib <- paste(repository, "src/contrib/", sep="")
 
 # Packages to install
 packages <- c(
@@ -52,23 +52,31 @@ package.dependencies <- Map(
                             )
 package.dependencies <- unique(unlist(package.dependencies))
 package.dependencies <- package.dependencies['R' != package.dependencies]
-
+package.dependencies <- package.dependencies['Zelig' != package.dependencies]
+package.dependencies
 
 # This package comes with source distributions
-install.packages('methods', repos=cran.master) # methods comes bundled with R
+# methods comes bundled with R
+install.packages('methods', repos=cran.master, quiet = TRUE)
 
 # These packages come bundled with binary distributions
-install.packages('survival', repos=cran.master)
-install.packages('MASS', repos=cran.master)
+install.packages('survival', repos=cran.master, quiet = TRUE)
+install.packages('MASS', repos=cran.master, quiet = TRUE)
 
 # Install all the dependency packages from CRAN
-for (pkg in names(package.dependencies))
+for (pkg in package.dependencies)
   install.packages(pkg, repos = cran.master)
 
 # Initialize fails and successes as zero
 fails <- successes <- c()
 
 for (pkg in packages) {
+
+  message(pkg)
+  message(pkg)
+  message(pkg)
+  message(pkg)
+  message(pkg)
 
   res <- tryCatch(
                   {
@@ -95,3 +103,6 @@ cat(paste(paste(successes, sep = " * "), collapse = "\n"))
 cat("\n\n")
 cat("The following packages were not installed:\n")
 cat(paste(paste(fails, sep = " * "), collapse = "\n"))
+
+
+warnings()

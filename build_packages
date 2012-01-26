@@ -80,6 +80,7 @@ parser.add_option("-c", "--clone", dest="clone", default="clone")
 parser.add_option("-b", "--build", dest="build", default="build")
 parser.add_option("-C", "--check", dest="check", default="check")
 parser.add_option("-l", "--log", dest="log", default="zbuild.log")
+parser.add_option("-S", "--skip-check", action="store_true", dest="skip_check", default=False)
 parser.add_option(
     "-R", "--repo", dest="repo", 
     default="https://api.github.com/users/zeligdev/repos"
@@ -115,6 +116,7 @@ print "  clone ....", options.clone
 print "  check ....", options.check
 print "  build ....", options.build
 print "  log file ..", options.log
+print "  check .....", not options.skip_check
 
 
 # Logger
@@ -187,24 +189,26 @@ for r in repos:
 os.chdir(os.path.join(original_wd, check_dir))
 
 # Check
-for r in repos:
-  pkg = r['name']
-  pkg = os.path.join("..", clone_dir, pkg)
 
-  if not is_r_package(pkg):
-    zelig_build.info(pkg + " is not an R package. Skipping")
-    continue
+if not options.skip_check:
+  for r in repos:
+    pkg = r['name']
+    pkg = os.path.join("..", clone_dir, pkg)
 
-  zelig_build.info(pkg + " is an R package")
-  zelig_build.info("Checking %s")
+    if not is_r_package(pkg):
+      zelig_build.info(pkg + " is not an R package. Skipping")
+      continue
 
-  # Run from the system's shell
-  result = subprocess.call("R CMD check %s" % pkg, shell=True)
+    zelig_build.info(pkg + " is an R package")
+    zelig_build.info("Checking %s")
 
-  if result == 0:
-    zelig_build.info("Check: Success")
-  else:
-    zelig_build.info("Check: Fail")
+    # Run from the system's shell
+    result = subprocess.call("/usr/bin/R CMD check %s" % pkg, shell=True)
+
+    if result == 0:
+      zelig_build.info("Check: Success")
+    else:
+      zelig_build.info("Check: Fail")
 
 
 # Change working directory
@@ -218,7 +222,7 @@ for r in repos:
   zelig_build.info("Building %s" % pkg)
 
   # Run from the system's shell
-  result = subprocess.call("R CMD build %s" % pkg, shell=True)
+  result = subprocess.call("/usr/bin/R CMD build %s" % pkg, shell=True)
 
   # Move into the "REPOS" file
   # print tarball, "->", pkg_repos_dest

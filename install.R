@@ -14,25 +14,36 @@
 cran.master <- "http://software.rc.fas.harvard.edu/mirrors/R/"
 cran.master <- "http://cran.r-project.org/"
 
-repository <- "http://140.247.114.117/~matt/"
+repository <- "http://r.iq.harvard.edu/"
 src.contrib <- paste(repository, "src/contrib/", sep="")
 
 # Packages to install
 packages <- c(
-              'Zelig',
-              'ZeligMisc',
-              'ZeligNetwork',
-              'ZeligMultivariate',
-              'ZeligMultinomial',
-              'ZeligMixed',
-              'ZeligBayesian',
-              'ZeligCommon',
-              'ZeligSurvey',
-              'ZeligOrdinal',
-              'ZeligGEE',
-              'ZeligGAM',
+              'Zelig', 'ZeligMisc', 'ZeligNetwork', 'ZeligMultivariate',
+              'ZeligMultinomial', 'ZeligMixed', 'ZeligBayesian', 'ZeligCommon',
+              'ZeligSurvey', 'ZeligOrdinal', 'ZeligGEE', 'ZeligGAM',
               'ZeligLeastSquares'
               )
+
+
+# Make options here
+count <- 1
+menu.items <- rep(FALSE, length(packages)+1)
+names(menu.items) <- c("EVERYTHING", names(menu.items))
+
+message("The following Zelig packages currently exist: ")
+for (pkg in packages) {
+  cat(sprintf("  %2s)  %s\n", count, pkg))
+  count <- count + 1
+}
+
+
+
+q()
+
+
+
+
 
 packages <- unique(packages)
 names(packages) <- packages
@@ -40,20 +51,31 @@ names(packages) <- packages
 # Information on all available packages
 package.matrix <- available.packages(src.contrib, fields="Depends")
 package.matrix <- tools::package.dependencies(package.matrix)
-
-# All available
-
-
-
-# Dependencies for each package
+package.matrix <- package.matrix[ ! is.na(package.matrix) ]
+package.matrix <- package.matrix[packages]
 package.dependencies <- Map(
-                            function (pkg) pkg[, 1],
+                            function (pkg) { pkg[, 1] },
                             package.matrix
                             )
+
+message("Dependencies (by package):")
+
+for (pkg.name in names(package.dependencies)) {
+  pkg.deps <- package.dependencies[[pkg.name]]
+  pkg.deps <- paste(pkg.deps, collapse = ", ")
+
+  cat(sprintf(" * %s (%s)", pkg.deps, pkg.name), "\n")
+}
+q()
+
 package.dependencies <- unique(unlist(package.dependencies))
 package.dependencies <- package.dependencies['R' != package.dependencies]
 package.dependencies <- package.dependencies['Zelig' != package.dependencies]
-package.dependencies
+
+
+message("The following dependencies will be installed from CRAN")
+message(paste(paste(" *", package.dependencies), collapse = "\n"))
+message("\n\n")
 
 # This package comes with source distributions
 # methods comes bundled with R
@@ -71,13 +93,6 @@ for (pkg in package.dependencies)
 fails <- successes <- c()
 
 for (pkg in packages) {
-
-  message(pkg)
-  message(pkg)
-  message(pkg)
-  message(pkg)
-  message(pkg)
-
   res <- tryCatch(
                   {
                     install.packages(pkg, repos=repository, type='source');
@@ -97,12 +112,14 @@ for (pkg in packages) {
 
 
 # Output success
-cat("The folowing packages have been successfully installed:\n")
-cat(paste(paste(successes, sep = " * "), collapse = "\n"))
+if (length(successes)) {
+  message("The folowing packages have been successfully installed:")
+  message(paste(paste(successes, sep = " * "), collapse = "\n"))
+}
 
-cat("\n\n")
-cat("The following packages were not installed:\n")
-cat(paste(paste(fails, sep = " * "), collapse = "\n"))
+message("\n\n")
 
-
-warnings()
+if (length(fails)) {
+  cat("The following packages were not installed:\n")
+  cat(paste(paste(fails, sep = " * "), collapse = "\n"))
+}

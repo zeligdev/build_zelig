@@ -2,8 +2,10 @@
 
 # json converts json strips into data structures
 # urllib2 makes the https request
-import json, urllib2, datetime, sys, os, shutil
+import urllib2, datetime, sys, os, shutil
 import subprocess
+
+import simplejson as json
 
 from os import system
 from optparse import OptionParser

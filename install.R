@@ -8,6 +8,9 @@
 # @author Matt Owen 
 # @date 01/24/2012
 
+start.time <- proc.time()
+
+message("Zelig Installer v1.0")
 
 
 # Repositories
@@ -31,19 +34,14 @@ count <- 1
 menu.items <- rep(FALSE, length(packages)+1)
 names(menu.items) <- c("EVERYTHING", names(menu.items))
 
-message("The following Zelig packages currently exist: ")
+message("The following Zelig packages are available: ")
+
 for (pkg in packages) {
   cat(sprintf("  %2s)  %s\n", count, pkg))
   count <- count + 1
 }
 
-
-
-q()
-
-
-
-
+message("\n")
 
 packages <- unique(packages)
 names(packages) <- packages
@@ -66,7 +64,8 @@ for (pkg.name in names(package.dependencies)) {
 
   cat(sprintf(" * %s (%s)", pkg.deps, pkg.name), "\n")
 }
-q()
+
+message("\n")
 
 package.dependencies <- unique(unlist(package.dependencies))
 package.dependencies <- package.dependencies['R' != package.dependencies]
@@ -115,11 +114,17 @@ for (pkg in packages) {
 if (length(successes)) {
   message("The folowing packages have been successfully installed:")
   message(paste(paste(successes, sep = " * "), collapse = "\n"))
+  message("\n")
 }
 
-message("\n\n")
 
 if (length(fails)) {
   cat("The following packages were not installed:\n")
   cat(paste(paste(fails, sep = " * "), collapse = "\n"))
+  message("\n")
 }
+
+
+dur <- round((proc.time() - start.time)[["elapsed"]])
+
+cat(sprintf("Elapsed time: %d:%d", trunc(dur/60), dur %% 60), "\n")

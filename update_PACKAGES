@@ -1,0 +1,14 @@
+#!/usr/bin/python
+
+import subprocess, os
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-d", "--dest", dest="dest")
+(options, args) = parser.parse_args()
+
+destination = os.path.expanduser(options.dest)
+
+r_script = '"setwd(\'%s\'); tools:::write_PACKAGES()"' % destination
+cmd = "echo %s | /usr/bin/R --vanilla --slave" % r_script
+subprocess.call(cmd, shell=True)

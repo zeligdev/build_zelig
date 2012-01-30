@@ -81,16 +81,18 @@ parser = OptionParser()
 parser.add_option("-d", "--dest", dest="dest", metavar = "REPOSITORY",
     help = "Specify the destination directory of repository"
     )
-parser.add_option("-c", "--clone", dest="clone", default="clone")
-parser.add_option("-b", "--build", dest="build", default="build")
-parser.add_option("-C", "--check", dest="check", default="check")
-parser.add_option("-l", "--log", dest="log", default="zbuild.log")
+parser.add_option("-l", "--log", dest="log", default="zbuild.log", 
+    metavar = "LOG_FILE",
+    help = "Create a log file"
+    )
 parser.add_option("-S", "--skip-check", dest="skip_check",
-    action="store_true", default=False
+    action = "store_true", default=False,
+    help = "Do not check package for errors/warnings. This uses `R CMD check`."
     )
 parser.add_option(
     "-R", "--repo", dest="repo", 
-    default="https://api.github.com/users/zeligdev/repos"
+    default = "https://api.github.com/users/zeligdev/repos",
+    help = "Specify the URI of the repository"
     )
 
 # Parse the commandline
@@ -119,12 +121,12 @@ original_wd = os.getcwd()
 # Display info blurb
 print "Zelig Build v0.9"
 print "----------------"
-print "  dest .....", options.dest
-print "  clone ....", options.clone
-print "  check ....", options.check
-print "  build ....", options.build
-print "  log file ..", options.log
-print "  check .....", not options.skip_check
+print "  Destination Repository ...", options.dest
+print "  Clone Directory ..........", clone_dir
+print "  Rcheck Directory .........", check_dir
+print "  Build Directory ..........", build_dir
+print "  Log File .................", options.log
+print "  Skip Check? ..............", not options.skip_check
 
 
 # Logger

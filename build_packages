@@ -7,8 +7,10 @@ import subprocess
 
 import simplejson as json
 
-from os import system
 from optparse import OptionParser
+from tempfile import mkdtemp
+
+
 
 # log
 class log:
@@ -75,12 +77,16 @@ def is_r_package (path):
 parser = OptionParser()
 
 # Create a menu
-parser.add_option("-d", "--dest", dest="dest")
+parser.add_option("-d", "--dest", dest="dest", metavar = "REPOSITORY",
+    help = "Specify the destination directory of repository"
+    )
 parser.add_option("-c", "--clone", dest="clone", default="clone")
 parser.add_option("-b", "--build", dest="build", default="build")
 parser.add_option("-C", "--check", dest="check", default="check")
 parser.add_option("-l", "--log", dest="log", default="zbuild.log")
-parser.add_option("-S", "--skip-check", action="store_true", dest="skip_check", default=False)
+parser.add_option("-S", "--skip-check", dest="skip_check",
+    action="store_true", default=False
+    )
 parser.add_option(
     "-R", "--repo", dest="repo", 
     default="https://api.github.com/users/zeligdev/repos"
@@ -94,6 +100,11 @@ parser.add_option(
 clone_dir = os.path.expanduser(options.clone)
 check_dir = os.path.expanduser(options.check)
 build_dir = os.path.expanduser(options.build)
+
+clone_dir = mkdtemp(prefix = "clone")
+check_dir = mkdtemp(prefix = "check")
+build_dir = mkdtemp(prefix = "build")
+
 url = os.path.expanduser(options.repo)
 
 # Ensure that -d or --dest are set
@@ -167,6 +178,20 @@ repos = json.loads(response)
 
 # Change working directory
 os.chdir(clone_dir)
+
+
+
+# If command
+if len(args):
+  pkg_list = []
+
+  for r in repos:
+    pkg = r['name']
+    if pkg in args: pkg_list.append(r)
+
+    pass
+  repos = pkg_list
+
 
 
 # Clone
@@ -261,3 +286,8 @@ zelig_build.info("Creating 'PACKAGES' and 'PACKAGES.gz' Files in " + os.getcwd()
 r_script = '"tools:::write_PACKAGES()"'
 cmd = "echo %s | /usr/bin/R --vanilla --slave" % r_script
 subprocess.call(cmd, shell=True)
+
+
+os.rmdir(clone_dir)
+os.rmdir(check_dir)
+os.rmdir(build_dir)

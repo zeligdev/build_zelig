@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
-# json converts json strips into data structures
 # urllib2 makes the https request
 import urllib2, datetime, sys, os, shutil
 import subprocess
 
+# python <= 2.5 requires the inclusion of "simplejson" since the json module
+# is not standard on old versions of python
 import simplejson as json
 
 from optparse import OptionParser
@@ -97,10 +98,6 @@ parser.add_option(
 
 
 # Parse options
-clone_dir = os.path.expanduser(options.clone)
-check_dir = os.path.expanduser(options.check)
-build_dir = os.path.expanduser(options.build)
-
 clone_dir = mkdtemp(prefix = "clone")
 check_dir = mkdtemp(prefix = "check")
 build_dir = mkdtemp(prefix = "build")
@@ -280,6 +277,7 @@ for src_file in os.listdir(build_dir):
 # PACKAGES files
 os.chdir(destination)
 
+#
 zelig_build.info("Creating 'PACKAGES' and 'PACKAGES.gz' Files in " + os.getcwd())
 
 # Create PACKAGES and PACKAGES.gz file
@@ -288,6 +286,7 @@ cmd = "echo %s | /usr/bin/R --vanilla --slave" % r_script
 subprocess.call(cmd, shell=True)
 
 
-os.rmdir(clone_dir)
-os.rmdir(check_dir)
-os.rmdir(build_dir)
+# Clean up temp directories
+shutil.rmtree(clone_dir)
+shutil.rmtree(check_dir)
+shutil.rmtree(build_dir)

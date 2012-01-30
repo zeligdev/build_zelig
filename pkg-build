@@ -81,7 +81,7 @@ parser = OptionParser()
 parser.add_option("-d", "--dest", dest="dest", metavar = "REPOSITORY",
     help = "Specify the destination directory of repository"
     )
-parser.add_option("-l", "--log", dest="log", default="zbuild.log", 
+parser.add_option("-l", "--log", dest="log", default="pkg-build.log", 
     metavar = "LOG_FILE",
     help = "Create a log file"
     )

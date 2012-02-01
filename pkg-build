@@ -133,26 +133,6 @@ print "  Skip Check? ..............", not options.skip_check
 zelig_build = log(options.log)
 zelig_build.info("Staring up")
 
-
-# make directories
-try: 
-  zelig_build.info("Creating directory " + clone_dir)
-  os.mkdir(clone_dir)
-except OSError: 
-  zelig_build.info("Directory " + clone_dir + "already exists. Skipping")
-
-try:
-  zelig_build.info("Creating directory " + check_dir)
-  os.mkdir(check_dir)
-except OSError:
-  zelig_build.info("Directory " + check_dir + "already exists. Skipping")
-
-try:
-  zelig_build.info("Creating directory " + build_dir)
-  os.mkdir(build_dir)
-except OSError:
-  zelig_build.info("Directory " + build_dir + "already exists. Skipping")
-
 #
 if not os.path.exists(destination):
   zelig_build.info(

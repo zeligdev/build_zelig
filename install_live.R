@@ -14,6 +14,9 @@ start.time <- proc.time()
 #
 message("+----------------------+")
 message("| Zelig Installer v1.0 |")
+message("|                      |")
+message("| List and install all |")
+message("|  All Zelig packages  |")
 message("+----------------------+")
 message("\n")
 
@@ -42,32 +45,97 @@ names(menu.items) <- c("EVERYTHING", packages)
 
 message("The following Zelig packages are available: ")
 
-selections <- (function () {
-  count <- 1
-  menu.items <- c(TRUE, rep(FALSE, length(packages)))
-  names(menu.items) <- c("Install Everything", packages)
 
+# Choose the type of installation
+#
+# Queries the use on whether they would like to install everything, perform
+# an interactive custom install, or quit.
+choose.setup <- (function () {
 
+  # 
+  menu.items <- c(
+                  "Install All Packages [Recommended]",
+                  "Custom Install",
+                  "Quit"
+                  )
+
+  #
   function () {
-    menu(names(menu.items))
+    res <- menu(menu.items)
+
+    if (res == 3)
+      q()
+
+    res
   }
 })()
 
-selections()
-
-q()
 
 
+# Choose the packages to install
+#
+#
+choose.packages <- (function () {
 
-for (opt in names(menu.items)) {
-  char <- ifelse(menu.items[opt], '*', ' ')
-  cat(sprintf(" %s %2s)  %s\n", char, count, opt))
-  count <- count + 1
-}
+  # Create a menu with 
+  menu.items <- rep(FALSE, length(packages)-1)
+  names(menu.items) <- packages[-1]
 
-message("\n")
+  descr <- c(
+    Zelig = "The core Zelig package",
+    ZeligMisc = "Miscellaneous",
+    ZeligLeastSquares = "Multi-stage least squares regressions",
+    ZeligSurvey = "Survey-weighted regressions",
+    ZeligGEE = "General Estimating Equation (GEE) Models",
+    ZeligGAM = "General Additive Models (GAM)",
+    ZeligNetwork = "Social Network Regressions",
+    ZeligBayesian = "Bayesian general linear models",
+    ZeligMultivariate = "Multivariate regressions",
+    ZeligMultinomial = 
+      "Regressions for simulating multinomial nominal and categorical data",
+    ZeligMixed = "Multilevel regressions",
+    ZeligOrdinal = "Methods for simulating ordinal data",
+    ZeligCommon = "Common regressions"
+    )
 
-q()
+
+  function () {
+
+    print(paste(descr[packages], " (", packages, ")", sep=""))
+    q()
+
+    res <- -1
+
+    while (res != 0) {
+      message("Please make a selection. `0' installs the your selections")
+      res <- menu(c(names(menu.items)))
+
+      menu.items[res] <- !menu.items[res]
+      
+      message("\n\n\n\n\n")
+      message("The following packages will be installed: ")
+      cat(paste(names(Filter(function (x) x, menu.items)), sep=", "))
+      cat("\n\n")
+    }
+
+
+    c("Zelig", names(Filter(function (x) x, menu.items)))
+  }
+})()
+
+
+
+response <- choose.setup()
+
+# If response is "CUSTOM INSTALL"
+if (response == 2)
+  # This specifies the list of appropriate packages
+  packages <- choose.packages()
+
+# Else... install everything
+
+
+# PROGRAM START
 
 packages <- unique(packages)
 names(packages) <- packages

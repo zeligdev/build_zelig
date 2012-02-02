@@ -82,7 +82,7 @@ choose.packages <- (function () {
   names(menu.items) <- packages[-1]
 
   descr <- c(
-    Zelig = "The core Zelig package",
+    # Zelig = "The core Zelig package",
     ZeligMisc = "Miscellaneous",
     ZeligLeastSquares = "Multi-stage least squares regressions",
     ZeligSurvey = "Survey-weighted regressions",
@@ -98,23 +98,36 @@ choose.packages <- (function () {
     ZeligCommon = "Common regressions"
     )
 
+  # 
+  menu.items <- menu.items[sort(names(descr))]
+  descr <- descr[sort(names(descr))]
 
   function () {
 
-    # print(paste(descr[packages], " (", packages, ")", sep=""))
+    # If there is a mismatch between menu.items and descr, then 
+    if (length(menu.items) != length(descr))
+      stop("Installation script failed.")
 
+    # Note that packages[-1] is the list of all packages except for "Zelig"
+    blurbs <- paste(descr, " (", names(descr), ")", sep="")
+    blurbs <- paste(names(descr), ": ", descr, sep ="")
+
+    #
     res <- -1
 
     while (res != 0) {
       message("Please make a selection. `0' installs the your selections")
-      res <- menu(c(names(menu.items)))
+      res <- menu(blurbs)
 
       menu.items[res] <- !menu.items[res]
       
       message("\n\n\n\n\n")
-      message("The following packages will be installed: ")
-      cat(paste(names(Filter(function (x) x, menu.items)), sep=", "))
-      cat("\n\n")
+      cat("Note: Your current selection of packages is:\n")
+
+      selections <- names(Filter(function (x) x, menu.items))
+      selections.str <- paste(paste(" -->", selections), collapse = "\n")
+
+      message(selections.str, "\n\n")
     }
 
 
@@ -136,10 +149,20 @@ if (response == 2)
 
 # PROGRAM START
 
+message("\n\n\n\nPackage Installation Start")
+
+# Ensure that all the packages are unique, and that they are appropriately named
 packages <- unique(packages)
 names(packages) <- packages
 
-# Information on all available packages
+
+# Specify which packages are being installed
+cat("\nThe following packages of the Zelig suite will be installed:\n")
+
+message(paste(paste(" -->", packages), collapse = "\n"))
+
+
+# Extract dependency information on all packages in the repository
 package.matrix <- available.packages(src.contrib, fields="Depends")
 package.matrix <- tools::package.dependencies(package.matrix)
 package.matrix <- package.matrix[ ! is.na(package.matrix) ]
@@ -149,13 +172,20 @@ package.dependencies <- Map(
                             package.matrix
                             )
 
-message("Dependencies (by package):")
 
+# Tell user which packages are being install from CRAN
+cat("\nThe following are the package dependencies \n")
+
+# List all the dependencies required to be installed from CRAN
 for (pkg.name in names(package.dependencies)) {
+  # Get dependencies for each package (sans version number)
   pkg.deps <- package.dependencies[[pkg.name]]
+
+  # Collapse character vector into a single string
   pkg.deps <- paste(pkg.deps, collapse = ", ")
 
-  cat(sprintf(" * %s (%s)", pkg.deps, pkg.name), "\n")
+  # Output as a message
+  message(sprintf(" --> %s requires: %s", pkg.name, pkg.deps))
 }
 
 message("\n")
@@ -165,26 +195,54 @@ package.dependencies <- package.dependencies['R' != package.dependencies]
 package.dependencies <- package.dependencies['Zelig' != package.dependencies]
 
 
+# List all the dependencies required individually
 message("The following dependencies will be installed from CRAN")
-message(paste(paste(" *", package.dependencies), collapse = "\n"))
-message("\n\n")
+message(paste(paste(" -->", package.dependencies), collapse = "\n"))
+
+# Output message
+cat("\nEnsuring that several important packages are installed...\n")
+
+message("\n")
+
 
 # This package comes with source distributions
 # methods comes bundled with R
+message("Installing 'methods'")
 install.packages('methods', repos=cran.master, quiet = TRUE)
 
+message("\n")
+
+
 # These packages come bundled with binary distributions
+message("Installing 'survival'...")
 install.packages('survival', repos=cran.master, quiet = TRUE)
+
+message("\n")
+
+
+message("Installing 'MASS'...")
 install.packages('MASS', repos=cran.master, quiet = TRUE)
 
+message("\n\n")
+
+
 # Install all the dependency packages from CRAN
+
+message("Installing dependency packages from CRAN")
+
 for (pkg in package.dependencies)
   install.packages(pkg, repos = cran.master)
+
+message("\n\n")
+
 
 # Initialize fails and successes as zero
 fails <- successes <- c()
 
+message("Installing Zelig packages\n")
+
 for (pkg in packages) {
+  message("Installing ", pkg)
   res <- tryCatch(
                   {
                     install.packages(pkg, repos=repository, type='source');
@@ -193,6 +251,7 @@ for (pkg in packages) {
                   warning = function (w) FALSE,
                   error = function (e) FALSE
                   )
+  message("\n")
 
   if (res)
     successes <- c(successes, pkg)
@@ -201,6 +260,7 @@ for (pkg in packages) {
     fails <- c(fails, pkg)
 }
 
+message("\n\n")
 
 
 # Output success

@@ -101,8 +101,7 @@ choose.packages <- (function () {
 
   function () {
 
-    print(paste(descr[packages], " (", packages, ")", sep=""))
-    q()
+    # print(paste(descr[packages], " (", packages, ")", sep=""))
 
     res <- -1
 

@@ -108,25 +108,32 @@ choose.packages <- (function () {
     if (length(menu.items) != length(descr))
       stop("Installation script failed.")
 
-    # Note that packages[-1] is the list of all packages except for "Zelig"
-    blurbs <- paste(descr, " (", names(descr), ")", sep="")
-    blurbs <- paste(names(descr), ": ", descr, sep ="")
-
-    #
     res <- -1
 
     while (res != 0) {
-      message("Please make a selection. `0' installs the your selections")
+      # Use selections to paste asterisks to the front of the menu items
+      blurbs <- Map(function (x) ifelse(x, "* ", ""), menu.items)
+      blurbs <- paste(blurbs, names(descr), ": ", descr, sep ="")
+
+      # Helpful message
+      message("Please make a selection. \"0\" installs your selections.")
+      message()
+      message("Asterisks (*) indicate the package is set to be installed.")
+
+      # Display the menu
       res <- menu(blurbs)
 
+      # Invert the selection for what was chosen
       menu.items[res] <- !menu.items[res]
       
       message("\n\n\n\n\n")
       cat("Note: Your current selection of packages is:\n")
 
+      # Format the selections
       selections <- names(Filter(function (x) x, menu.items))
       selections.str <- paste(paste(" -->", selections), collapse = "\n")
 
+      # Display the selections
       message(selections.str, "\n\n")
     }
 

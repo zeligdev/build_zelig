@@ -4,9 +4,6 @@ manage the building of statistical packages.
 
 ##Instructions
 1. Clone this repository
-2. Run: ```sh update_repo```
-
-##To-Do:
-1. Rewrite ```update_repo``` to leverage GitHub API
-2. Allow use of command-line arguments
-3. Allow use of a config file to specify repo location, etc.
+2. Run: ```python pkg-build -h``` for help instructions and syntax explanation
+3. Run: ```python pkg-build -d <DIRECTORY_NAME>``` to clone, check and build the repository within ```<DIRECTORY_NAME>```
+4. Run: ```pythong pkg-build -d <DIRECTORY_NAME> <PKG_TITLE>``` to clone, check and build the package titled ```<PKG_TITLE>``` within the repository ```<DIRECTORY_NAME>```

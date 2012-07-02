@@ -255,7 +255,11 @@ for (pkg in packages) {
                     install.packages(pkg, repos=repository, type='source');
                     TRUE
                   },
-                  warning = function (w) FALSE,
+                  warning = function (w) {
+                    print(w)
+                    q()
+                    FALSE
+                  },
                   error = function (e) FALSE
                   )
   message("\n")
